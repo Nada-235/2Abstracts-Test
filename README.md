@@ -93,3 +93,12 @@ function Search() {
 3. **Memory Leak Prevention** - Cleanup abandoned requests ✅
 4. **Error Boundaries** - Add error handling ✅
 5. **Performance Optimization** - Memoize/cache results ✅
+
+
+**Technologies Used:**
+1. Axios – for efficient data fetching from the GitHub API.
+2. React Query (useQuery) – to manage fetching with Axios, including caching, error handling, and loading states.
+3. Tailwind CSS – for styling components with utility-first classes.
+4. React Table – a headless UI library used to build a flexible and powerful data table interface.
+5. FontAwesomeIcon - for Icons.
+
