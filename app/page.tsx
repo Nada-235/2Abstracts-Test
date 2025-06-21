@@ -1,102 +1,98 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { SortingState } from "@tanstack/react-table";
+
+import { getData, Issue } from "@/lib/api";
+import Loading from "@/app/loading";
+import Table from "./components/Table";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [pagination, setPagination] = useState<number>(10);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const [data, setData] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [noMoreData, setNoMoreData] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const primarySort = sorting[0] ?? { id: "created_at", desc: false };
+        const result = await getData({
+          page: pageNumber,
+          per_page: pagination,
+          sort: primarySort.id,
+          direction: primarySort.desc ? "desc" : "asc",
+        });
+
+        setData(result);
+        setNoMoreData(result.length < pagination);
+      } catch (err) {
+        setError("Failed to fetch data");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [sorting, pageNumber, pagination]);
+
+  return (
+    <div className="h-screen w-screen flex flex-col">
+      <header className="sticky top-0 z-20 bg-white text-orange-600 font-bold text-2xl flex items-center pl-14 h-14  shadow">
+        Getting Data
+      </header>
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-14 w-full">
+          {loading && <Loading />}
+          {!loading && error && <p className="text-red-500">{error}</p>}
+          {!loading && !error && data.length === 0 && (
+            <p>No data available for the current selection.</p>
+          )}
+          {!loading && !error && data.length > 0 && (
+            <Table data={data} sorting={sorting} setSorting={setSorting} />
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </main>{" "}
+      <footer className="sticky bottom-0 z-10 bg-white flex gap-4 flex-wrap items-center justify-center w-full h-24  shadow">
+        <button
+          disabled={pageNumber <= 1}
+          onClick={() => setPageNumber((p) => Math.max(1, p - 1))}
+          className="px-4 py-2 border rounded disabled:opacity-50"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Prev
+        </button>
+        <span>Page: {pageNumber}</span>
+        <button
+          disabled={loading || noMoreData}
+          onClick={() => setPageNumber((p) => p + 1)}
+          className="px-4 py-2 border rounded disabled:opacity-50"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Next
+        </button>
+        <label htmlFor="pageSize" className="ml-4 font-medium">
+          Rows per page:
+        </label>
+        <select
+          id="pageSize"
+          value={pagination}
+          onChange={(e) => {
+            setPagination(Number(e.target.value));
+            setPageNumber(1);
+          }}
+          className="px-2 py-2 border rounded"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+          {[10, 25, 50].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
       </footer>
     </div>
   );
