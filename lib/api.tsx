@@ -4,7 +4,7 @@ const githubApi = axios.create({
   baseURL: "https://api.github.com/repos/octocat/Hello-World/issues?",
   headers: {
     Accept: "application/vnd.github.v3+json",
-    Authorization: `Bearer ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}`,
+    Authorization: `Bearer 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`,
   },
 });
 
